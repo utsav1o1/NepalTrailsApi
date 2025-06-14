@@ -1,5 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using NepalTrails.Data;
+using NepalTrails.Mappings;
+using NepalTrails.Repositories.Implementations;
+using NepalTrails.Repositories.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +16,8 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<NepalTrailsDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddScoped<IRegionRepository, RegionRepository>();
+builder.Services.AddAutoMapper(typeof(AutoMapperProfiles));
 
 var app = builder.Build();
 

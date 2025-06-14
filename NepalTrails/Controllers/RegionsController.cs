@@ -1,8 +1,12 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using NepalTrails.Data;
 using NepalTrails.Models.Domain;
 using NepalTrails.Models.DTO;
+using NepalTrails.Repositories.Interfaces;
+using System.Xml.Linq;
 
 namespace NepalTrails.Controllers
 {
@@ -11,78 +15,55 @@ namespace NepalTrails.Controllers
     public class RegionsController : ControllerBase
     {
         private readonly NepalTrailsDbContext dbcontext;
+        private readonly IRegionRepository regionRepository;
+        private readonly IMapper mapper;
 
-        public RegionsController(NepalTrailsDbContext dbcontext)
+        public RegionsController(NepalTrailsDbContext dbcontext, IRegionRepository regionRepository, IMapper mapper)
         {
            this.dbcontext = dbcontext;
+            this.regionRepository = regionRepository;
+            this.mapper = mapper;
         }
         [HttpGet]
-        public IActionResult GetAllRegion()
+        public async Task<IActionResult> GetAllRegion()
         {
-           
-            var regions =dbcontext.Regions.ToList();
 
-            var regionsDTO = new List<RegionDTO>();
+            var regions = await regionRepository.GetAllAsync();
 
-            foreach (var region in regions)
-            {
-                regionsDTO.Add(new RegionDTO()
-                {
-                    Id = region.Id,
-                    Code = region.Code,
-                    Name = region.Name,
-                    RegionImageUrl = region.RegionImageUrl
-                });
-            }
+            //var regionsDTO = new List<RegionDTO>();
+            var regionsDTO = mapper.Map<List<RegionDTO>>(regions);
             return Ok(regionsDTO);
         }
 
         [HttpGet]
         [Route("{id:guid}")]
-        public IActionResult GetById([FromRoute]Guid id)
+        public async Task<IActionResult> GetById([FromRoute]Guid id)
         {
-            var region = dbcontext.Regions.Where(r => r.Id == id).FirstOrDefault();
+            var region =await regionRepository.GetAsync(id);
 
             if (region == null)
             {
                 return NotFound();
             }
 
-            var regionsDTO = new RegionDTO
-            {
-                Id = region.Id,
-                Code = region.Code,
-                Name = region.Name,
-                RegionImageUrl = region.RegionImageUrl
-            };
+            var regionsDTO= mapper.Map<RegionDTO>();
 
             return Ok(regionsDTO);
         }
 
         [HttpPost]
-        public IActionResult Create([FromBody] AddRegionRequestDTO addRegionRequestDTO)
+        public async Task<IActionResult> Create([FromBody] AddRegionRequestDTO addRegionRequestDTO)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
-            var region = new Region
-            {
-                Code = addRegionRequestDTO.Code,
-                Name = addRegionRequestDTO.Name,
-                RegionImageUrl = addRegionRequestDTO.RegionImageUrl
-            };
+            var region = mapper.Map<Region>(addRegionRequestDTO);
+           
+            region = await regionRepository.CreateAsync(region);
 
-            dbcontext.Regions.Add(region);
-            dbcontext.SaveChanges();
-
-            var regionsDTO = new RegionDTO
-            {
-                Id = region.Id,
-                Code = region.Code,
-                Name = region.Name,
-                RegionImageUrl = region.RegionImageUrl
-            };
+            var regionsDTO = mapper.Map<RegionDTO>(region);
+            
 
 
             return CreatedAtAction(nameof(GetById), new {id= regionsDTO.Id}, regionsDTO);
@@ -92,44 +73,30 @@ namespace NepalTrails.Controllers
         //update region 
         [HttpPut]
         [Route("{id:guid}")]
-        public IActionResult Update([FromRoute] Guid id, [FromBody] UpdateRegionRequestDTO updateRegionRequestDTO )
+        public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] UpdateRegionRequestDTO updateRegionRequestDTO )
         {
-            var region = dbcontext.Regions.FirstOrDefault(r => r.Id == id);
+            var region = mapper.Map<Region>(updateRegionRequestDTO);
+
+            region = await regionRepository.UpdateAsync(id, region);
+
             if (region == null)
-                return BadRequest(ModelState);
-            region.Code = updateRegionRequestDTO.Code;
-            region.Name = updateRegionRequestDTO.Name;
-            region.RegionImageUrl = updateRegionRequestDTO.RegionImageUrl;
-            dbcontext.SaveChanges();
+                return NotFound();
 
-            var regionsDTO = new RegionDTO
-            {
-                Id = region.Id,
-                Code = region.Code,
-                Name = region.Name,
-                RegionImageUrl = region.RegionImageUrl
-            };
-
+            var regionsDTO = mapper.Map<UpdateRegionRequestDTO>(region);
 
             return Ok(regionsDTO);
         }
 
         [HttpDelete]
         [Route("{id:guid}")]
-        public IActionResult Delete([FromRoute] Guid id)
+        public async Task<IActionResult> Delete([FromRoute] Guid id)
         {
-            var region = dbcontext.Regions.FirstOrDefault(r=>r.Id == id);
+           
+            var region = await regionRepository.DeleteAsync(id);
             if (region == null)
-                return BadRequest(ModelState);
-            dbcontext.Regions.Remove(region);
-            dbcontext.SaveChanges();
-            var regionsDTO = new RegionDTO
-            {
-                Id = region.Id,
-                Code = region.Code,
-                Name = region.Name,
-                RegionImageUrl = region.RegionImageUrl
-            };
+                return NotFound();
+
+            var regionsDTO = mapper.Map<RegionDTO>(region);
 
             return Ok(regionsDTO);
             
