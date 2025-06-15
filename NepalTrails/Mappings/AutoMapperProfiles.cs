@@ -11,6 +11,8 @@ namespace NepalTrails.Mappings
             CreateMap<Region, RegionDTO>().ReverseMap();
             CreateMap<AddRegionRequestDTO, Region>().ReverseMap();
             CreateMap<UpdateRegionRequestDTO, Region>().ReverseMap();
+            CreateMap<AddTrailRequestDTO, Trail>().ReverseMap();
+            CreateMap<TrailDTO, Trail>().ReverseMap();
         }
     }
 }
