@@ -46,7 +46,7 @@ namespace NepalTrails.Controllers
                 return NotFound();
             }
 
-            var regionsDTO= mapper.Map<RegionDTO>();
+            var regionsDTO= mapper.Map<RegionDTO>(region);
 
             return Ok(regionsDTO);
         }

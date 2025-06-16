@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using NepalTrails.Data;
 using NepalTrails.Models.Domain;
 using NepalTrails.Models.DTO;
-using NepalTrails.Repositories.Implementations;
+using NepalTrails.Repositories.Interfaces;
 
 namespace NepalTrails.Controllers
 {
@@ -14,9 +14,9 @@ namespace NepalTrails.Controllers
     {
         private readonly NepalTrailsDbContext dbcontext;
         private readonly IMapper mapper;
-        private readonly TrailRepository trailRepository;
+        private readonly ITrailRepository trailRepository;
 
-        public TrailsController(NepalTrailsDbContext dbcontext, IMapper mapper, TrailRepository trailRepository) 
+        public TrailsController(NepalTrailsDbContext dbcontext, IMapper mapper, ITrailRepository trailRepository) 
         {
             this.dbcontext = dbcontext;
             this.mapper = mapper;
@@ -31,6 +31,14 @@ namespace NepalTrails.Controllers
             await trailRepository.CreateAsync(trail);
             
             return Ok(mapper.Map<TrailDTO>(trail));
+        }
+
+
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
+        {
+            var trails = await trailRepository.GetAllAsync();
+            return Ok(mapper.Map<List<TrailDTO>>(trails));
         }
     }
 }
